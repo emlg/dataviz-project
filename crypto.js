@@ -1,8 +1,17 @@
-function toggleBTC(){
-  var button = document.getElementById("BTC");
-  console.log("COUCOU");
-  button.color = "#FFC857";
-  button.background = "#5A7D7C";
+function highlight(button){
+  var id = button.getAttribute("name");
+  //console.log("COUCOU " + id);
+  let bars = focus.selectAll(".bar")._groups[0];
+  for (let i = 0; i < bars.length; i ++){
+    let curr_id = bars[i].id
+    if(curr_id != id){
+      focus.selectAll("#"+curr_id).attr("class", "bar--notfocus");
+    }
+  }
+}
+
+function resetcolor(){
+  focus.selectAll(".bar--notfocus").attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); });
 }
 
 function getPercentage(oldPrice, newPrice){
@@ -14,9 +23,11 @@ function getPercentage(oldPrice, newPrice){
   return percentage;
 }
 
+var initializing = true;
+
 var svg = d3.select("svg"),
     margin = {top: 20, right: 20, bottom: 110, left: 40},
-    margin2 = {top: 430, right: 20, bottom: 30, left: 40},
+    margin2 = {top: 430, right: 20, bottom: 10, left: 40},
     width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom,
     height2 = +svg.attr("height") - margin2.top - margin2.bottom;
@@ -30,10 +41,10 @@ var x = d3.scaleBand().range([0, width]).padding(0.1),
 var xAxis = d3.axisBottom(x),
     xAxis2 = d3.axisBottom(x2),
     yAxis = d3.axisLeft(y).tickSize(0)
-    .tickPadding(6);
+    .tickPadding(6).tickFormat(d => d + "%");
 
 var brush = d3.brushX()
-    .extent([[0, 0], [width, height2]])
+    .extent([[0, 0], [width, 40]])
     .on("brush end", brushed);
 
 var focus = svg.append("g") //Focus is the svg for the graph
@@ -67,12 +78,12 @@ function fillCurrencies(row){
   };
 }
 
-d3.csv("cleaning/crypto_prices.csv", function(error, data) {
+d3.csv("crypto_prices.csv", function(error, data) {
   if (error) throw error;
   fillPrices(data);
   fillCurrencies(data[0]);
-  updateGraph("Apr 28 2013", "Nov 07 2017");
   x.domain(currencies);
+  updateGraph("Apr 01 2017", "Nov 07 2017");
 });
 
 x2.domain([parseDate("Apr 2013"), parseDate("Nov 2017")]);
@@ -83,7 +94,7 @@ function updateGraph(beginDate, endDate){
     let percentages = [];
     let oldPrice = day_prices[beginDate];
     let newPrice = day_prices[endDate];
-    console.log(oldPrice);
+    //console.log(oldPrice);
     let currenciesCount = currencies.length;
     for(let i = 0; i < currenciesCount; i++) {
       let percentage = getPercentage(oldPrice[i], newPrice[i]);
@@ -95,34 +106,52 @@ function updateGraph(beginDate, endDate){
 
     y.domain([minPercentage, maxPercentage]);
 
+    focus.selectAll(".bar").remove();
+
     focus.selectAll(".bar") //Compute, place and draw every bar
         .data(percentages)
       .enter().append("rect")
         .attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); })
         .attr("y", function(d) { return y(Math.max(0, d)); })
         .attr("x", function(d, i) { return x(currencies[i]); })
+        .attr("id", function(d, i) { return currencies[i]; })
         .attr("height", function(d) { return Math.abs(y(d) - y(0)); })
         .attr("width", x.bandwidth());
+
+    focus.selectAll("#xaxis").remove();
+    focus.selectAll("#yaxis").remove();
+
+    focus.append("g") //Append x axis of graph
+            .attr("id", "xaxis")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0,"+ y(0) + ")") //height/2 + margin.top
+            .call(xAxis);
+
+    focus.append("g") //Append y axis of graph
+            .attr("id", "yaxis")
+            .attr("class", "axis axis--y")
+            .call(yAxis);
+
+
 }
 
-focus.append("g") //Append x axis of graph
-    .attr("class", "axis axis--x")
-    .attr("transform", "translate(0,"+ y(0) + ")") //height/2 + margin.top
-    .call(xAxis);
-
-focus.append("g") //Append y axis of graph
-    .attr("class", "axis axis--y")
-    .call(yAxis);
-
 context.append("g") //Axis for brush
+    .attr("id", "taxis")
     .attr("class", "axis axis--x")
-    .attr("transform", "translate(0," + height2/2 + ")")
+    .attr("transform", "translate(0," + (height2/3) + ")")
     .call(xAxis2);
 
 context.append("g") //Selecting area on brush
+    .attr("id", "brusharea")
     .attr("class", "brush")
     .call(brush)
-    .call(brush.move, x.range());
+    .call(brush.move, [x2(parseDate("Apr 2017")), x2(parseDate("Nov 2017"))]);
+
+context.append("text")
+    .attr("id", "timeinterval")
+    .attr("transform", "translate(0," + height2+ ")")
+    .text("Time interval Apr 28 2013 to Nov 07 2017");
+
 
 function brushed() {
   var s = d3.event.selection || x2.range();
@@ -133,7 +162,12 @@ function brushed() {
   var split_end = time_interval[1].toString().split(" ");
   var begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
   var end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
-  updateGraph(begin_date, end_date);
+  //console.log("time interval ", begin_date, end_date);
+  d3.select("#timeinterval").text("Time interval " + begin_date + " to "+ end_date);
+  if (initializing == false){
+    updateGraph(begin_date, end_date);
+  }
+  initializing = false;
 }
 
 function type(d) { //Function that parses the data on read
