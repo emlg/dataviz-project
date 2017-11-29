@@ -45,7 +45,7 @@ var xAxis = d3.axisBottom(x),
 
 var brush = d3.brushX()
     .extent([[0, 0], [width, 40]])
-    .on("brush end", brushed);
+    .on("end", brushed);
 
 var focus = svg.append("g") //Focus is the svg for the graph
     .attr("class", "focus")
@@ -88,6 +88,22 @@ d3.csv("crypto_prices.csv", function(error, data) {
 
 x2.domain([parseDate("Apr 2013"), parseDate("Nov 2017")]);
 
+function cleanGraph(bars, y_0){
+  bars.transition()
+      .duration(1000)
+      .attr("y", y_0)
+      .attr("height", 0)
+      .remove();
+
+  focus.selectAll("#xaxis")
+        .transition()
+        .duration(500)
+        .attr("transform", "translate(0,"+ y_0 + ")")
+        .remove();
+  focus.selectAll("#yaxis").remove();
+}
+
+
 //Function that updates the graph when brushing
 function updateGraph(beginDate, endDate){
 
@@ -106,33 +122,36 @@ function updateGraph(beginDate, endDate){
 
     y.domain([minPercentage, maxPercentage]);
 
-    focus.selectAll(".bar").remove();
+    cleanGraph(focus.selectAll(".bar"), y(0));
 
     focus.selectAll(".bar") //Compute, place and draw every bar
         .data(percentages)
       .enter().append("rect")
         .attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); })
-        .attr("y", function(d) { return y(Math.max(0, d)); })
-        .attr("x", function(d, i) { return x(currencies[i]); })
         .attr("id", function(d, i) { return currencies[i]; })
-        .attr("height", function(d) { return Math.abs(y(d) - y(0)); })
-        .attr("width", x.bandwidth());
+        .attr("x", function(d, i) { return x(currencies[i]); })
+        .attr("width", x.bandwidth())
+        .attr("y", y(0))
+        .transition()
+        .delay(500)
+        .duration(500)
+        .attr("y", function(d) { return y(Math.max(0, d)); })
+        .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
 
-    focus.selectAll("#xaxis").remove();
-    focus.selectAll("#yaxis").remove();
-
-    focus.append("g") //Append x axis of graph
+    focus.append("g")//Append x axis of graph
             .attr("id", "xaxis")
             .attr("class", "axis axis--x")
             .attr("transform", "translate(0,"+ y(0) + ")") //height/2 + margin.top
-            .call(xAxis);
+            .attr("visibility", "hidden")
+            .call(xAxis)
+            .transition()
+            .delay(500)
+            .attr("visibility", "visible");
 
     focus.append("g") //Append y axis of graph
             .attr("id", "yaxis")
             .attr("class", "axis axis--y")
             .call(yAxis);
-
-
 }
 
 context.append("g") //Axis for brush
