@@ -85,6 +85,29 @@ let currencies = [];
 let selected_currencies = ["BTC"];
 d3.selectAll("#list_crypto").selectAll("#BTC").attr("color", "#5B281C").attr("background", "#AEB7B3");
 
+let first_appearance = [];
+first_appearance[2013] = ["BTC", "XRP", "LTC"];
+first_appearance[2014] = ["DASH", "XMR"];
+first_appearance[2015] = ["ETH", "XEM"];
+first_appearance[2016] = ["NEO", "BCC", "ETC"];
+first_appearance[2017] = ["BCH", "NMR", "MIOTA", "START", "WAVES"];
+/*first_appearance["BTC"] = "Apr 28 2013";
+first_appearance["ETH"] = "Aug 07 2015";
+first_appearance["NEO"] = "Sep 09 2016";
+first_appearance["XRP"] = "Aug 04 2013";
+first_appearance["BCH"] = "Jul 23 2017";
+first_appearance["DASH"] = "Feb 14 2014";
+first_appearance["BCC"] = "Jan 20 2016";
+first_appearance["ETC"] = "Jul 24 2016";
+first_appearance["MIOTA"] = "Jun 13 2017";
+first_appearance["LTC"] = "Apr 28 2013";
+first_appearance["XMR"] = "May 21 2014";
+first_appearance["XEM"] = "Apr 01 2015";
+first_appearance["NMR"] = "Jun 23 2017";
+first_appearance["STRAT"] = "Aug 12 2016";
+first_appearance["WAVES"] = "Jun 02 2016";*/
+
+
 //Function that fill the day_prices object with the csv data
 function fillPrices(data){
   data.forEach(function(d){
@@ -202,6 +225,21 @@ context.append("text")
     .attr("transform", "translate(0," + height2+ ")")
     .text("Time interval Apr 01 2017 to Nov 07 2017");
 
+context.append("text")
+    .attr("id", "newcrypto")
+    .attr("transform", "translate(230,"+ height2+")")
+    .text("Here are the cryptocurrencies that appeared after your selected date.");
+
+function unavailableCryptocurrencies(begin_year){
+  let years = ["2013", "2014", "2015", "2016", "2017"];
+  let unvailable = [];
+  for(let i = years.indexOf(begin_year); i < years.length; i++){
+    unvailable.push(first_appearance[years[i]]);
+  }
+  //console.log("From the year " + begin_year+ ", the following currencies appeared "+ unvailable);
+  d3.select("#newcrypto").text("From the year " + begin_year+ ", the following currencies appeared "+ unvailable);
+}
+
 
 function brushed() {
   let s = d3.event.selection || x2.range();
@@ -217,6 +255,7 @@ function brushed() {
   if (initializing == false){
     updateGraph(begin_date, end_date);
   }
+  unavailableCryptocurrencies(split_begin[3]);
   initializing = false;
 }
 
