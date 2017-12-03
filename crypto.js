@@ -1,6 +1,28 @@
+function clicked(button){
+  let id = button.getAttribute("id");
+  let index = selected_currencies.indexOf(id);
+  if(index == -1){
+    selected_currencies.push(id);
+    button.style.color = "#5B281C";
+    button.style.background =  "#AEB7B3";
+  }else {
+    selected_currencies.splice(index, 1);
+    button.style.color = "#AEB7B3";
+    button.style.background="#1C2826";
+  }
+  let start = d3.select(".selection").attr("x");
+  let end =  +start + +d3.select(".selection").attr("width");
+  let time_interval = [start, end].map(x2.invert, x2);
+  let split_begin = time_interval[0].toString().split(" ");
+  let split_end = time_interval[1].toString().split(" ");
+  let begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
+  let end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
+  d3.select("#timeinterval").text("Time interval " + begin_date + " to "+ end_date);
+  updateGraph(begin_date, end_date);
+}
+
 function highlight(button){
-  var id = button.getAttribute("name");
-  //console.log("COUCOU " + id);
+  let id = button.getAttribute("id");
   let bars = focus.selectAll(".bar")._groups[0];
   for (let i = 0; i < bars.length; i ++){
     let curr_id = bars[i].id
@@ -23,42 +45,45 @@ function getPercentage(oldPrice, newPrice){
   return percentage;
 }
 
-var initializing = true;
+let initializing = true;
 
-var svg = d3.select("svg"),
+let svg = d3.select("svg"),
     margin = {top: 20, right: 20, bottom: 110, left: 40},
     margin2 = {top: 430, right: 20, bottom: 10, left: 40},
     width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom,
     height2 = +svg.attr("height") - margin2.top - margin2.bottom;
 
-var parseDate = d3.timeParse("%b %Y");
+let parseDate = d3.timeParse("%b %Y");
 
-var x = d3.scaleBand().range([0, width]).padding(0.1),
+let x = d3.scaleBand().range([0, width]).padding(0.1),
     x2 = d3.scaleTime().range([0, width]),
     y = d3.scaleLinear().range([height, 0]);
 
-var xAxis = d3.axisBottom(x),
+let xAxis = d3.axisBottom(x),
     xAxis2 = d3.axisBottom(x2),
     yAxis = d3.axisLeft(y).tickSize(0)
     .tickPadding(6).tickFormat(d => d + "%");
 
-var brush = d3.brushX()
+let brush = d3.brushX()
     .extent([[0, 0], [width, 40]])
     .on("end", brushed);
 
-var focus = svg.append("g") //Focus is the svg for the graph
+let focus = svg.append("g") //Focus is the svg for the graph
     .attr("class", "focus")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var context = svg.append("g") //Context is the svg for the brush
+let context = svg.append("g") //Context is the svg for the brush
     .attr("class", "context")
     .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
 //Read csv file only once and keep the day prices of all currencies in a JS object
-var day_prices = {};
+let day_prices = {};
 //List to keep name of currencies
-var currencies = [];
+let currencies = [];
+//List of selected currencies
+let selected_currencies = ["BTC"];
+d3.selectAll("#list_crypto").selectAll("#BTC").attr("color", "#5B281C").attr("background", "#AEB7B3");
 
 //Function that fill the day_prices object with the csv data
 function fillPrices(data){
@@ -111,13 +136,17 @@ function updateGraph(beginDate, endDate){
     let newPrice = day_prices[endDate];
     let currenciesCount = currencies.length;
     for(let i = 0; i < currenciesCount; i++) {
-      let percentage = getPercentage(oldPrice[i], newPrice[i]);
+      let percentage = 0;
+      if(selected_currencies.indexOf(currencies[i]) > -1){
+        percentage = getPercentage(oldPrice[i], newPrice[i]);
+      }
       percentages.push(percentage);
     }
 
     let maxPercentage = d3.max(percentages);
     let minPercentage = d3.min(percentages);
 
+    //x.domain(selected_currencies);
     y.domain([minPercentage, maxPercentage]);
 
     cleanGraph(focus.selectAll(".bar"), y(0));
@@ -130,7 +159,7 @@ function updateGraph(beginDate, endDate){
         .attr("width", x.bandwidth());
 
     for (let i = 0; i < currencies.length; i++){
-      focus.select("#"+currencies[i])
+      focus.select("#"+ currencies[i])
           .attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); })
           .attr("y", y(0))
           .transition()
@@ -175,14 +204,14 @@ context.append("text")
 
 
 function brushed() {
-  var s = d3.event.selection || x2.range();
-  var time_interval = s.map(x2.invert, x2);
+  let s = d3.event.selection || x2.range();
+  let time_interval = s.map(x2.invert, x2);
   //Display somewhere the exact time interval
   //Compute new values for each currency and display new bars
-  var split_begin = time_interval[0].toString().split(" ");
-  var split_end = time_interval[1].toString().split(" ");
-  var begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
-  var end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
+  let split_begin = time_interval[0].toString().split(" ");
+  let split_end = time_interval[1].toString().split(" ");
+  let begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
+  let end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
   //console.log("time interval ", begin_date, end_date);
   d3.select("#timeinterval").text("Time interval " + begin_date + " to "+ end_date);
   if (initializing == false){

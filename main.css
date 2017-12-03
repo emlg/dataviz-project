@@ -18,7 +18,7 @@ button {
   border : 1px solid #AEB7B3;
 }
 
-button:hover{
+button:hover, #BTC{
   color: #5B281C;
   background: #AEB7B3;
 }
@@ -31,7 +31,7 @@ button:hover{
 }
 
 .bar--notfocus{
-  fill: #AEB7B3;
+  fill: #444134;
 }
 
 .axis text {
