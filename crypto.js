@@ -1,3 +1,28 @@
+let mode = 1;
+
+function switchMode(button){
+  let b = button.getAttribute("id");
+  if(mode == 2){
+    mode = 1;
+    d3.selectAll("#modeSwitch").text("Go to Investment Mode");
+    d3.select(".form").attr("visibility", "hidden");
+  }else if(mode == 1){
+    mode = 2;
+    d3.selectAll("#modeSwitch").text("Go to Basic Mode");
+    d3.select(".form").attr("visibility", "visible");
+  }
+  //console.log("Switched mode to "+mode);
+  let start = d3.select(".selection").attr("x");
+  let end =  +start + +d3.select(".selection").attr("width");
+  let time_interval = [start, end].map(x2.invert, x2);
+  let split_begin = time_interval[0].toString().split(" ");
+  let split_end = time_interval[1].toString().split(" ");
+  let begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
+  let end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
+  d3.select("#timeinterval").text("Time interval " + begin_date + " to "+ end_date);
+  updateGraph(begin_date, end_date);
+}
+
 function clicked(button){
   let id = button.getAttribute("id");
   let index = selected_currencies.indexOf(id);
@@ -83,7 +108,6 @@ let day_prices = {};
 let currencies = [];
 //List of selected currencies
 let selected_currencies = ["BTC"];
-d3.selectAll("#list_crypto").selectAll("#BTC").attr("color", "#5B281C").attr("background", "#AEB7B3");
 
 let first_appearance = [];
 first_appearance[2013] = ["BTC", "XRP", "LTC"];
@@ -153,7 +177,7 @@ function cleanGraph(bars, y_0){
 
 //Function that updates the graph when brushing
 function updateGraph(beginDate, endDate){
-
+  if(mode == 1){
     let percentages = [];
     let oldPrice = day_prices[beginDate];
     let newPrice = day_prices[endDate];
@@ -206,6 +230,9 @@ function updateGraph(beginDate, endDate){
             .attr("id", "yaxis")
             .attr("class", "axis axis--y")
             .call(yAxis);
+  } else if(mode ==2){
+
+  }
 }
 
 context.append("g") //Axis for brush

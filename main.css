@@ -1,4 +1,4 @@
-h1, p {
+h1, p{
   font-family: verdana, serif;
   color : #AEB7B3;
 }
@@ -8,7 +8,15 @@ select {
   border-width: 2px;
 }
 
-button {
+form {
+  font-family: verdana, serif;
+  color : #AEB7B3;
+  font-size: 11px;
+  display: inline;
+  padding-left: 50px;
+}
+
+button{
   background-color : #1C2826;
   font-family: verdana, serif;
   font-size: 11px;
@@ -18,10 +26,11 @@ button {
   border : 1px solid #AEB7B3;
 }
 
-button:hover, #BTC{
+button:hover, #BTC, input {
   color: #5B281C;
   background: #AEB7B3;
 }
+
 .bar--positive {
   fill: #5C7457;
 }
