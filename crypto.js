@@ -90,10 +90,9 @@ x2.domain([parseDate("Apr 2013"), parseDate("Nov 2017")]);
 
 function cleanGraph(bars, y_0){
   bars.transition()
-      .duration(1000)
+      .duration(500)
       .attr("y", y_0)
-      .attr("height", 0)
-      .remove();
+      .attr("height", 0);
 
   focus.selectAll("#xaxis")
         .transition()
@@ -110,7 +109,6 @@ function updateGraph(beginDate, endDate){
     let percentages = [];
     let oldPrice = day_prices[beginDate];
     let newPrice = day_prices[endDate];
-    //console.log(oldPrice);
     let currenciesCount = currencies.length;
     for(let i = 0; i < currenciesCount; i++) {
       let percentage = getPercentage(oldPrice[i], newPrice[i]);
@@ -126,17 +124,21 @@ function updateGraph(beginDate, endDate){
 
     focus.selectAll(".bar") //Compute, place and draw every bar
         .data(percentages)
-      .enter().append("rect")
-        .attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); })
+        .enter().append("rect")
         .attr("id", function(d, i) { return currencies[i]; })
         .attr("x", function(d, i) { return x(currencies[i]); })
-        .attr("width", x.bandwidth())
-        .attr("y", y(0))
-        .transition()
-        .delay(500)
-        .duration(500)
-        .attr("y", function(d) { return y(Math.max(0, d)); })
-        .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
+        .attr("width", x.bandwidth());
+
+    for (let i = 0; i < currencies.length; i++){
+      focus.select("#"+currencies[i])
+          .attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); })
+          .attr("y", y(0))
+          .transition()
+          .delay(500)
+          .duration(500)
+          .attr("y", function(d) { return y(Math.max(0, d)); })
+          .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
+    }
 
     focus.append("g")//Append x axis of graph
             .attr("id", "xaxis")
@@ -169,7 +171,7 @@ context.append("g") //Selecting area on brush
 context.append("text")
     .attr("id", "timeinterval")
     .attr("transform", "translate(0," + height2+ ")")
-    .text("Time interval Apr 28 2013 to Nov 07 2017");
+    .text("Time interval Apr 01 2017 to Nov 07 2017");
 
 
 function brushed() {
