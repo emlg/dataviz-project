@@ -26,8 +26,8 @@ function getPercentage(oldPrice, newPrice){
 var initializing = true;
 
 var svg = d3.select("svg"),
-    margin = {top: 20, right: 20, bottom: 110, left: 40},
-    margin2 = {top: 430, right: 20, bottom: 10, left: 40},
+    margin = {top: 20, right: 20, bottom: 110, left: 50},
+    margin2 = {top: 430, right: 20, bottom: 10, left: 50},
     width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom,
     height2 = +svg.attr("height") - margin2.top - margin2.bottom;
@@ -45,7 +45,7 @@ var xAxis = d3.axisBottom(x),
 
 var brush = d3.brushX()
     .extent([[0, 0], [width, 40]])
-    .on("brush end", brushed);
+    .on("end", brushed);
 
 var focus = svg.append("g") //Focus is the svg for the graph
     .attr("class", "focus")
