@@ -176,7 +176,9 @@ function updateGraph(beginDate, endDate){
            .delay(500)
            .duration(500)
            .attr("y", function(d) { return y(amount_per_month[i]); })
-           .attr("height", function(d) { return Math.abs(y(amount_per_month[i]) - y(0)); });
+           .attr("height", function(d) { return Math.abs(y(amount_per_month[i]) - y(0)); })
+           /*.append("text")
+           .text(best_crypto_month[i]+ "  "+ amount_per_month[i])*/;
     }
 
     focus.append("g")//Append x axis of graph
