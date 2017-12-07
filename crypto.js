@@ -11,15 +11,8 @@ function switchMode(button){
     d3.selectAll("#modeSwitch").text("Go to Basic Mode");
     d3.select(".form").attr("visibility", "visible");
   }
-  let start = d3.select(".selection").attr("x");
-  let end =  +start + +d3.select(".selection").attr("width");
-  let time_interval = [start, end].map(x2.invert, x2);
-  let split_begin = time_interval[0].toString().split(" ");
-  let split_end = time_interval[1].toString().split(" ");
-  let begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
-  let end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
-  d3.select("#timeinterval").text("Time interval " + begin_date + " to "+ end_date);
-  updateGraph(begin_date, end_date);
+  console.log("Changed mode");
+  brushed();
 }
 
 function clicked(button){
@@ -34,15 +27,8 @@ function clicked(button){
     button.style.color = "#AEB7B3";
     button.style.background="#1C2826";
   }
-  let start = d3.select(".selection").attr("x");
-  let end =  +start + +d3.select(".selection").attr("width");
-  let time_interval = [start, end].map(x2.invert, x2);
-  let split_begin = time_interval[0].toString().split(" ");
-  let split_end = time_interval[1].toString().split(" ");
-  let begin_date = split_begin[1] + " " + split_begin[2] + " " + split_begin[3];
-  let end_date = split_end[1] + " " + split_end[2] + " " + split_end[3];
-  d3.select("#timeinterval").text("Time interval " + begin_date + " to "+ end_date);
-  updateGraph(begin_date, end_date);
+  console.log("selected new Crypto");
+  brushed();
 }
 
 function highlight(button){
@@ -102,7 +88,7 @@ let x = d3.scaleBand().range([0, width]).padding(0.1),
 let xAxis = d3.axisBottom(x),
     xAxis2 = d3.axisBottom(x2),
     yAxis = d3.axisLeft(y).tickSize(0)
-    .tickPadding(6).tickFormat(d => d + "%");
+    .tickPadding(6);
 
 let brush = d3.brushX()
     .extent([[0, 0], [width, 40]])
@@ -183,18 +169,25 @@ d3.csv("crypto_prices.csv", function(error, data) {
 x2.domain([parseDate("Apr 28 2013"), parseDate("Nov 07 2017")]);
 
 function cleanGraph(y_0, dates){
-
   //Set all histogram bars to 0
-  for (let i = 0; i < currencies.length; i++){
-    focus.select("#"+ currencies[i])
-         .transition()
-         .duration(500)
-         .attr("y", y_0)
-         .attr("height", 0);
-  }
-  for (let i = 0; i < currencies.length; i++){
-    focus.select("#"+ currencies[i]).transition().delay(500).remove();
-  }
+  //if(mode == 1){
+    for (let i = 0; i < currencies.length; i++){
+      focus.selectAll("#"+ currencies[i])
+           .transition()
+           .duration(500)
+           .attr("y", y_0)
+           .attr("height", 0).remove();
+    }
+  //} else if(mode ==2){
+    for (let i = 0; i < dates.length; i++){
+      focus.selectAll("#"+ dates[i].split(" ")[0])
+           .transition()
+           .duration(500)
+           .attr("y", y_0)
+           .attr("height", 0).remove();
+    }
+  //}
+
   //Change position of axis
   focus.selectAll("#xaxis")
         .transition()
@@ -202,20 +195,21 @@ function cleanGraph(y_0, dates){
         .attr("transform", "translate(0,"+ y_0 + ")")
         .remove();
   focus.selectAll("#yaxis").remove();
+  console.log("Cleaned graph : " + (focus.selectAll("rect")).size());
 }
 
 //Function that updates the graph when brushing
 function updateGraph(beginDate, endDate){
   if(mode == 1){
     //remove Dates of mode 2
-    for (let i = 0; i < dates.length; i++){
-      focus.select("#"+ dates[i].remove(" ").join(""))
+    /*for (let i = 0; i < dates.length; i++){
+      focus.select("#"+ dates[i].split(" ").join(""))
            .transition()
            .duration(500)
            .attr("y", y(0))
            .attr("height", 0);
-      focus.select("#"+ dates[i].remove(" ").join("")).transition().delay(500).remove();
-    }
+      focus.select("#"+ dates[i].split(" ").join("")).transition().delay(500).remove();
+    }*/
 
     let percentages = [];
     let oldPrice = day_prices[beginDate];
@@ -234,12 +228,12 @@ function updateGraph(beginDate, endDate){
     y.domain([minPercentage, maxPercentage]);
     cleanGraph(y(0), []);
 
-    console.log(percentages);
+    //console.log("percentages : " +percentages);
     focus.selectAll(".bar") //Compute, place and draw every bar
          .data(percentages)
          .enter().append("rect")
-         .attr("id", function(d, i) { return currencies[i]; })
-         .attr("x", function(d, i) { return x(currencies[i]); })
+         .attr("id", function(d, i) {return currencies[i]; })
+         .attr("x", function(d, i) {return x(currencies[i]); })
          .attr("width", x.bandwidth());
 
     for (let i = 0; i < currencies.length; i++){
@@ -247,9 +241,9 @@ function updateGraph(beginDate, endDate){
             .transition()
             .delay(500)
             .duration(500)
-            .attr("y", function(d) { return y(Math.max(0, d)); })
-            .attr("height", function(d) { return Math.abs(y(d) - y(0)); })
-            .attr("class", function(d) { return "bar bar--" + (d < 0 ? "negative" : "positive"); });
+            .attr("y", function(d) { return y(Math.max(0, percentages[i])); })
+            .attr("height", function(d) {return Math.abs(y(percentages[i]) - y(0)); })
+            .attr("class", function(d) { return "bar bar--" + (percentages[i] < 0 ? "negative" : "positive"); });
     }
 
     focus.append("g")//Append x axis of graph
@@ -262,6 +256,7 @@ function updateGraph(beginDate, endDate){
             .delay(500)
             .attr("visibility", "visible");
 
+    yAxis = yAxis.tickFormat(d => d + "%");
     focus.append("g") //Append y axis of graph
             .attr("id", "yaxis")
             .attr("class", "axis axis--y")
@@ -270,13 +265,13 @@ function updateGraph(beginDate, endDate){
   } else if(mode ==2){
 
     //Remove bars from mode 1
-    for (let i = 0; i < currencies.length; i++){
-      focus.select("#"+ currencies[i]).remove()
+    /*for (let i = 0; i < currencies.length; i++){
+      focus.select("#"+ currencies[i])//.remove()
            .transition()
            .duration(500)
            .attr("y", y(0))
            .attr("height", 0);
-    }
+    }*/
 
     let initial_value = 100; //dollars
     let amount_per_month = [];
@@ -315,24 +310,24 @@ function updateGraph(beginDate, endDate){
      focus.selectAll(".bar")
           .data(amount_per_month)
           .enter().append("rect")
-          .attr("id", function(d, i) { return dates[i].split(" ").join(""); })
+          .attr("id", function(d, i) { return dates[i].split(" ")[0]; })
           .attr("class", "bar bar--positive")
-          .transition()
+          /*.transition()
           .delay(500)
-          .duration(500)
+          .duration(500)*/
           .attr("x", function(d, i) { return (x(dates[i]) + x(dates[i + 1])) / 2; })
-          .attr("width", x.bandwidth())
-          .attr("y", function(d) { return y(d); })
-          .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
+          .attr("width", x.bandwidth());
+          /*.attr("y", function(d) { return y(d); })
+          .attr("height", function(d) { return Math.abs(y(d) - y(0)); });*/
 
     for (let i = 0; i < dates.length; i++){
-      focus.select("#"+ dates[i].split(" ").join(""))
+      focus.select("#"+ dates[i].split(" ")[0])
            .attr("class", "bar bar--positive")
            .transition()
            .delay(500)
            .duration(500)
-           .attr("y", function(d) { return y(d); })
-           .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
+           .attr("y", function(d) { return y(amount_per_month[i]); })
+           .attr("height", function(d) { return Math.abs(y(amount_per_month[i]) - y(0)); });
     }
 
     focus.append("g")//Append x axis of graph
@@ -387,8 +382,11 @@ function unavailableCryptocurrencies(begin_year){
 
 
 function brushed() {
-  let s = d3.event.selection || x2.range();
-  let time_interval = s.map(x2.invert, x2);
+  /*let s = d3.event.selection || x2.range();
+  let time_interval = s.map(x2.invert, x2);*/
+  let start = d3.select(".selection").attr("x");
+  let end =  +start + +d3.select(".selection").attr("width");
+  let time_interval = [start, end].map(x2.invert, x2);
   //Display somewhere the exact time interval
   //Compute new values for each currency and display new bars
   let split_begin = time_interval[0].toString().split(" ");
@@ -398,6 +396,7 @@ function brushed() {
   d3.select("#timeinterval").text("Time interval " + firstDate + " to "+ finalDate);
   //First time brushed() is called, d3 hasn't read the csv yet so we don't call updateGraph
   if (initializing == false){
+    console.log("Brushed");
     updateGraph(firstDate, finalDate);
   }
   unavailableCryptocurrencies(split_begin[3]);
