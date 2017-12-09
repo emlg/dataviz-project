@@ -1,4 +1,4 @@
-h1, p{
+h1, p, form {
   font-family: verdana, serif;
   color : #AEB7B3;
 }
@@ -40,6 +40,18 @@ button:hover, #BTC, input {
 }
 
 
+#visualize {
+  display:flex;
+  flex-direction:row;
+  justify-content: space-around;
+}
+
+#io {
+  display:flex;
+  flex-direction:column;
+  width : 15%;
+}
+
 #graph{
   display:flex;
   flex-direction:column;
@@ -62,7 +74,7 @@ button:hover, #BTC, input {
   stroke : none;
 }
 
-#timeinterval, #newcrypto{
+#timeinterval, #newcrypto, .cryptoname, #aggrwin, #listcrypto{
   font-family: verdana, serif;
   fill : #AEB7B3;
   font-size: 10px;
