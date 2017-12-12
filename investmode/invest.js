@@ -1,3 +1,5 @@
+//Indicator of initialization for the brushed function
+let init = true;
 //Default amount of investment for our computations
 let investamount = 100; //dollars
 //Function triggered by the button to change the value of investment
@@ -117,26 +119,25 @@ x2.domain([parseDate("May 01 2013"), parseDate("Nov 07 2017")]);
 
 //Function used to clean the bars and axis of the graph before drawing with the new data
 function cleanGraph(y_0, old_dates){
+  d3.selectAll(".cryptoname").remove();
   //Set all histogram bars to 0 using their id
-  for (let i = 0; i < old_dates.length -1 ; i++){
-    d3.select("#crypto--"+i).remove();
+  for (let i = 0; i < old_dates.length -1; i++){
     focus.selectAll("#bar--"+i)
-         .transition()//Nice transition to make the bars decrease to the origin
-         .duration(500)
-         .attr("y", y_0)
-         .attr("height", 0)
-         .remove();
+      .transition()//Nice transition to make the bars decrease to the origin
+      .duration(500)
+      .attr("height", 0)
+      .attr("y", y_0)
+      .remove();
   }
   //Change position of axis so that it matches the appearance of next axis and remove
   focus.selectAll("#xaxis")
         .transition()
         .duration(500)
-        .attr("transform", "translate(0,"+ y_0 + ")")
         .remove();
 }
 
 //Function that updates the graph when brushing
-function updateGraph(beginDate, endDate){
+async function updateGraph(beginDate, endDate){
     //Computing the new data to plot
     let amount_per_month = [];
     let best_crypto_month = [];
@@ -175,6 +176,7 @@ function updateGraph(beginDate, endDate){
     let maxAmount = d3.max(amount_per_month);
 
     cleanGraph(y(0), old_dates);
+    await sleep(500);
     x.domain(dates);
     y.domain([0, maxAmount]);
     //Depending on number of months to display, do or do not show all ticks on x axis
@@ -199,11 +201,10 @@ function updateGraph(beginDate, endDate){
       //Make bar raise to the corresponding height
       focus.select("#bar--"+i)
            .attr("x", (x(dates[i]) + x(dates[i + 1])) / 2)
+           .attr("width", x.bandwidth())
            .attr("y", y(0))
            .attr("height", 0)
-           .attr("width", x.bandwidth())
            .transition()
-           .delay(500)
            .duration(500)
            .attr("y", y(amount_per_month[i]))
            .attr("height", Math.abs(y(amount_per_month[i]) - y(0)));
@@ -223,7 +224,7 @@ function updateGraph(beginDate, endDate){
              }
            })
            .transition()
-           .delay(1000)
+           .delay(500)
            .text(best_crypto_month[i] + ": " + Math.round(amount_per_month[i])+'$');
     }
 
@@ -234,7 +235,6 @@ function updateGraph(beginDate, endDate){
           .attr("visibility", "hidden")
           .call(xAxis)
           .transition()
-          .delay(500)
           .attr("visibility", "visible");
 }
 
@@ -286,8 +286,12 @@ function brushed() {
   finalDate = split_end[1] + " " + split_end[2] + " " + split_end[3];
   //Change text of display with new time interval
   d3.select("#timeinterval").text("Time interval " + firstDate + " to "+ finalDate);
-  //Draw the new bars
-  updateGraph(firstDate, finalDate);
+  //Avoid calling updateGraph on initialization of brush area
+  if(init == false){
+    //Draw the new bars
+    updateGraph(firstDate, finalDate);
+  }
+  init = false;
   //Change text of display with new unavailable cryptocurrencies
   unavailableCryptocurrencies(split_begin[3]);
 }
@@ -295,4 +299,8 @@ function brushed() {
 function type(d) { //Function that parses the data on read
   d.value = +d.value;
   return d;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -5,7 +5,7 @@
 In this repository you will find the code and the data for our project.
 
 To see the visualization, go to : http://emlg.github.io/DataVis <br>
-From here you will be able to access both modes of our data visualization as long as a direct link to the code (present in this repository), the process book (also present here) and the screencast of the visualization (available on youtube).<br>
+From here you will be able to access both modes of our data visualization as well as a direct link to the code (present in this repository), the process book (also present here) and the screencast of the visualization (available on youtube).<br>
 
 To retrace our work : <br>
 In the data folder, you will find the original data on which we have worked.
