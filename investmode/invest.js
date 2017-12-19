@@ -176,6 +176,7 @@ async function updateGraph(beginDate, endDate){
     let maxAmount = d3.max(amount_per_month);
 
     cleanGraph(y(0), old_dates);
+    //We stop while the bars decrease before setting new axis to have a nice transition
     await sleep(500);
     x.domain(dates);
     y.domain([0, maxAmount]);
@@ -301,6 +302,6 @@ function type(d) { //Function that parses the data on read
   return d;
 }
 
-function sleep(ms) {
+function sleep(ms) { //Function that makes the code stops for the given number of milliseconds
   return new Promise(resolve => setTimeout(resolve, ms));
 }
